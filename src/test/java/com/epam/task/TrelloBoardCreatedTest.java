@@ -24,12 +24,13 @@ public class TrelloBoardCreatedTest {
   private final String expectedBoardsChangesName = "Boards changes with api and intellij";
   private final String defaultListFalse = "&defaultList=false";
   private final Map<String, String> userData = withCredentialsFromProperty();
-  private Board actualBoard;
-  private String boardId;
+  private Board actualNewBoard;
+  private Board actualChangesBoard;
+  private String boardsId;
 
   @Test(priority = 1)
   public void testBoardCreated() {
-    actualBoard = given()
+    actualNewBoard = given()
         .log()
         .method()
         .queryParam(key, queryParameterKey)
@@ -41,29 +42,33 @@ public class TrelloBoardCreatedTest {
         .extract()
         .as(Board.class);
     SoftAssert softAssert = new SoftAssert();
-    softAssert.assertEquals(actualBoard.getName(), expectedBoardsCreatedName,
-        "New Boards name isn't equal expected!");
-    softAssert.assertNotEquals(actualBoard.getId(), null,
-        "New Boards id isn't created!");
+    softAssert.assertEquals(actualNewBoard.getName(), expectedBoardsCreatedName,
+        "New boards name isn't equal expected!");
+    softAssert.assertNotEquals(actualNewBoard.getId(), null,
+        "New boards id isn't created!");
     softAssert.assertAll();
   }
 
   @Test(priority = 2)
   public void testBoardChangesName() {
-    boardId = actualBoard.getShortUrl().split("/")[4];
-    actualBoard = given()
+    boardsId = actualNewBoard.getShortUrl().split("/")[4];
+    actualChangesBoard = given()
         .log()
         .method()
         .queryParam(key, queryParameterKey)
         .queryParam(token, queryParameterToken)
         .body(userData)
-        .put(BOARDS + boardId + NAME + expectedBoardsChangesName)
+        .put(BOARDS + boardsId + NAME + expectedBoardsChangesName)
         .then()
         .statusCode(200)
         .extract()
         .as(Board.class);
-    assertEquals(actualBoard.getName(), expectedBoardsChangesName,
-        "Changes Boards name isn't equal expected!");
+    SoftAssert softAssert = new SoftAssert();
+    assertEquals(actualChangesBoard.getName(), expectedBoardsChangesName,
+        "Changes boards name isn't equal expected!");
+    softAssert.assertEquals(actualNewBoard.getId(), actualChangesBoard.getId(),
+        "New boards id isn't equals with changed boards Id!");
+    softAssert.assertAll();
   }
 
   @AfterTest
@@ -74,7 +79,7 @@ public class TrelloBoardCreatedTest {
         .queryParam(key, queryParameterKey)
         .queryParam(token, queryParameterToken)
         .body(userData)
-        .delete(BOARDS + boardId)
+        .delete(BOARDS + boardsId)
         .then()
         .statusCode(200);
   }
